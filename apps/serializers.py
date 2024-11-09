@@ -1,54 +1,98 @@
-from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
+from .models import User, Admin, Staff, Student, Room, Course, Group, StudentProfile, Payment, Salary, Debtor, \
+    SkippedClass, DashboardMetrics
 
-from apps.models import Group, SkippedClass, Room, User, Course
 
-
-class GroupModelSerializer(ModelSerializer):
+class UserModelSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Group
-        fields = 'id', 'name', 'teacher', 'course_start_time', 'day'
-
-    def to_representation(self, instance):
-        return super().to_representation(instance)
+        model = User
+        fields = ['id', 'username', 'role', 'phone_number', 'branch', 'photo']
 
 
-class GroupCreateModelSerializer(ModelSerializer):
+class AdminModelSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Group
-        fields = 'name', 'teacher', 'day', 'room', 'course_start_time'
+        model = Admin
+        fields = ['id', 'role', 'phone_number', 'branch', 'photo']
 
 
-class SkippedClassModelSerializer(ModelSerializer):
+class StaffModelSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SkippedClass
-        fields = 'student', 'group'
+        model = Staff
+        fields = ['id', 'role', 'phone_number', 'branch', 'photo']
 
 
-class RoomModelSerializer(ModelSerializer):
+class StudentModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = ['id', 'role', 'phone_number', 'branch', 'photo']
+
+
+class RoomModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
-        fields = 'name', 'room_capacity', 'number_of_desks_and_chairs'
+        fields = ['id', 'name', 'capacity', 'resources']
 
 
-class UserModelSerializer(ModelSerializer):
-    class Meta:
-        model = User
-        fields = 'id', 'first_name', 'last_name', 'phone_number', 'role'
-
-
-class UserCreateModelSerializer(ModelSerializer):
-    class Meta:
-        model = User
-        fields = 'first_name', 'last_name', 'phone_number', 'role', 'date_of_birth', 'gender', 'photo'
-
-
-class UserRetrieveUpdateDestroyModelSerializer(ModelSerializer):
-    class Meta:
-        model = User
-        fields = 'id', 'first_name', 'last_name', 'photo', 'balance', 'role', 'branch'
-
-
-class CourseModelSerializer(ModelSerializer):
+class CourseModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = "__all__"
+        fields = ['id', 'name', 'course_type', 'price', 'description']
+
+
+class GroupModelSerializer(serializers.ModelSerializer):
+    teacher = StaffModelSerializer()
+    room = RoomModelSerializer()
+    course = CourseModelSerializer()
+
+    class Meta:
+        model = Group
+        fields = ['id', 'name', 'teacher', 'day', 'room', 'start_date', 'end_date', 'start_time', 'course']
+
+
+class StudentProfileModelSerializer(serializers.ModelSerializer):
+    user = StudentModelSerializer()
+    group = GroupModelSerializer()
+
+    class Meta:
+        model = StudentProfile
+        fields = ['id', 'user', 'group', 'balance', 'is_active']
+
+
+class PaymentModelSerializer(serializers.ModelSerializer):
+    student = StudentProfileModelSerializer()
+
+    class Meta:
+        model = Payment
+        fields = ['id', 'student', 'amount', 'date', 'description']
+
+
+class SalaryModelSerializer(serializers.ModelSerializer):
+    staff = StaffModelSerializer()
+
+    class Meta:
+        model = Salary
+        fields = ['id', 'staff', 'amount', 'month', 'is_paid']
+
+
+class DebtorModelSerializer(serializers.ModelSerializer):
+    student = StudentProfileModelSerializer()
+
+    class Meta:
+        model = Debtor
+        fields = ['id', 'student', 'amount_due', 'comments']
+
+
+class SkippedClassModelSerializer(serializers.ModelSerializer):
+    student = StudentProfileModelSerializer()
+    group = GroupModelSerializer()
+
+    class Meta:
+        model = SkippedClass
+        fields = ['id', 'student', 'group', 'date']
+
+
+class DashboardMetricsModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DashboardMetrics
+        fields = ['id', 'staff_count', 'active_students_count', 'group_count', 'debtor_count', 'monthly_payment_count',
+                  'group_leave_count']
